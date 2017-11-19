@@ -55,32 +55,9 @@ int32_t FastText::getWordId(const std::string& word) const {
   return dict_->getId(word);
 }
 
-int32_t FastText::getSubwordId(const std::string& word) const {
-  int32_t h = dict_->hash(word) % args_->bucket;
-  return dict_->nwords() + h;
-}
-
 void FastText::getWordVector(Vector& vec, const std::string& word) const {
-  const std::vector<int32_t>& ngrams = dict_->getSubwords(word);
   vec.zero();
-  for (int i = 0; i < ngrams.size(); i ++) {
-    addInputVector(vec, ngrams[i]);
-  }
-  if (ngrams.size() > 0) {
-    vec.mul(1.0 / ngrams.size());
-  }
-}
-
-void FastText::getVector(Vector& vec, const std::string& word) const {
-  getWordVector(vec, word);
-}
-
-void FastText::getSubwordVector(Vector& vec, const std::string& subword)
-    const {
-  vec.zero();
-  int32_t h = dict_->hash(subword) % args_->bucket;
-  h = h + dict_->nwords();
-  addInputVector(vec, h);
+  addInputVector(vec, getWordId(word));
 }
 
 void FastText::saveVectors() {
@@ -326,13 +303,13 @@ void FastText::cbow(Model& model, real lr,
                     const std::vector<int32_t>& line) {
   std::vector<int32_t> bow;
   std::uniform_int_distribution<> uniform(1, args_->ws);
-  for (int32_t w = 0; w < line.size(); w++) {
+  const auto line_len = static_cast<int32_t>(line.size());
+  for (int32_t w = 0; w < line_len; w++) {
     int32_t boundary = uniform(model.rng);
     bow.clear();
     for (int32_t c = -boundary; c <= boundary; c++) {
-      if (c != 0 && w + c >= 0 && w + c < line.size()) {
-        const std::vector<int32_t>& ngrams = dict_->getSubwords(line[w + c]);
-        bow.insert(bow.end(), ngrams.cbegin(), ngrams.cend());
+      if (c != 0 && w + c >= 0 && w + c < line_len) {
+        bow.push_back(line[w + c]);
       }
     }
     model.update(bow, line[w], lr);
@@ -342,12 +319,13 @@ void FastText::cbow(Model& model, real lr,
 void FastText::skipgram(Model& model, real lr,
                         const std::vector<int32_t>& line) {
   std::uniform_int_distribution<> uniform(1, args_->ws);
-  for (int32_t w = 0; w < line.size(); w++) {
+  const auto line_len = static_cast<int32_t>(line.size());
+  for (int32_t w = 0; w < line_len; w++) {
     int32_t boundary = uniform(model.rng);
-    const std::vector<int32_t>& ngrams = dict_->getSubwords(line[w]);
+    const std::vector<int32_t> input(1, line[w]);
     for (int32_t c = -boundary; c <= boundary; c++) {
-      if (c != 0 && w + c >= 0 && w + c < line.size()) {
-        model.update(ngrams, line[w + c], lr);
+      if (c != 0 && w + c >= 0 && w + c < line_len) {
+        model.update(input, line[w + c], lr);
       }
     }
   }
@@ -449,24 +427,6 @@ void FastText::getSentenceVector(
     if (count > 0) {
       svec.mul(1.0 / count);
     }
-  }
-}
-
-void FastText::ngramVectors(std::string word) {
-  std::vector<int32_t> ngrams;
-  std::vector<std::string> substrings;
-  Vector vec(args_->dim);
-  dict_->getSubwords(word, ngrams, substrings);
-  for (int32_t i = 0; i < ngrams.size(); i++) {
-    vec.zero();
-    if (ngrams[i] >= 0) {
-      if (quant_) {
-        vec.addRow(*qinput_, ngrams[i]);
-      } else {
-        vec.addRow(*input_, ngrams[i]);
-      }
-    }
-    std::cout << substrings[i] << " " << vec << std::endl;
   }
 }
 

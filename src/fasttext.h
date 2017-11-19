@@ -57,12 +57,7 @@ class FastText {
   FastText();
 
   int32_t getWordId(const std::string&) const;
-  int32_t getSubwordId(const std::string&) const;
-  FASTTEXT_DEPRECATED(
-    "getVector is being deprecated and replaced by getWordVector.")
-  void getVector(Vector&, const std::string&) const;
   void getWordVector(Vector&, const std::string&) const;
-  void getSubwordVector(Vector&, const std::string&) const;
   void addInputVector(Vector&, int32_t) const;
   inline void getInputVector(Vector& vec, int32_t ind) {
     vec.zero();
@@ -97,7 +92,6 @@ class FastText {
       std::istream&,
       int32_t,
       std::vector<std::pair<real, std::string>>&) const;
-  void ngramVectors(std::string);
   void precomputeWordVectors(Matrix&);
   void
   findNN(const Matrix&, const Vector&, int32_t, const std::set<std::string>&);

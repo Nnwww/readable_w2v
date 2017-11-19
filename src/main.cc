@@ -200,17 +200,6 @@ void printSentenceVectors(const std::vector<std::string> args) {
   exit(0);
 }
 
-void printNgrams(const std::vector<std::string> args) {
-  if (args.size() != 4) {
-    printPrintNgramsUsage();
-    exit(EXIT_FAILURE);
-  }
-  FastText fasttext;
-  fasttext.loadModel(std::string(args[2]));
-  fasttext.ngramVectors(std::string(args[3]));
-  exit(0);
-}
-
 void nn(const std::vector<std::string> args) {
   int32_t k;
   if (args.size() == 3) {
@@ -272,8 +261,6 @@ int main(int argc, char** argv) {
     printWordVectors(args);
   } else if (command == "print-sentence-vectors") {
     printSentenceVectors(args);
-  } else if (command == "print-ngrams") {
-    printNgrams(args);
   } else if (command == "nn") {
     nn(args);
   } else if (command == "analogies") {

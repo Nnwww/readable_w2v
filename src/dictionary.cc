@@ -316,7 +316,7 @@ namespace fasttext {
   }
 
   void Dictionary::prune(std::vector<int32_t>& idx) {
-    std::vector<int32_t> words, ngrams;
+    std::vector<int32_t> words;
     for (auto it = idx.cbegin(); it != idx.cend(); ++it) {
       if (*it < nwords_) {words.push_back(*it);}
     }
@@ -328,7 +328,8 @@ namespace fasttext {
     std::fill(word2int_.begin(), word2int_.end(), -1);
     size_t j = 0;
     for (size_t i = 0; i < words_.size(); i++) {
-      if (getType(i) == entry_type::label || (j < words.size() && words[j] == static_cast<int32_t>(i))) {
+      if (getType(i) == entry_type::label ||
+          (j < words.size() && words[j] == static_cast<int32_t>(i))) {
         words_[j] = words_[i];
         word2int_[find(words_[j].word)] = j;
         j++;
@@ -336,7 +337,6 @@ namespace fasttext {
     }
     nwords_ = words.size();
     size_ = nwords_ +  nlabels_;
-    words_.erase(words_.begin() + size_, words_.end());
   }
 
   std::vector<int64_t> Dictionary::getCounts(entry_type type) const {
