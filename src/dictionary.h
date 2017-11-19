@@ -23,8 +23,12 @@
 
 namespace fasttext {
 
+using id_t =  int32_t;
+enum class entry_type : int8_t {word=0, label=1};
+
 struct entry {
   std::string word;
+  entry_type type;
   int64_t count;
 };
 
@@ -38,14 +42,15 @@ class Dictionary {
     void initTableDiscard();
     void reset(std::istream&) const;
     void pushHash(std::vector<int32_t>&, int32_t) const;
-    void addSubwords(std::vector<int32_t>&, const std::string&, int32_t) const;
 
     std::shared_ptr<Args> args_;
     std::vector<int32_t> word2int_;
     std::vector<entry> words_;
 
     std::vector<real> pdiscard_;
+    int32_t size_;
     int32_t nwords_;
+    int32_t nlabels_;
     int64_t ntokens_;
 
     int64_t pruneidx_size_;
@@ -55,9 +60,12 @@ class Dictionary {
     static const std::string EOS;
     explicit Dictionary(std::shared_ptr<Args>);
     int32_t nwords() const;
+    int32_t nlabels() const;
     int64_t ntokens() const;
     int32_t getId(const std::string&) const;
     int32_t getId(const std::string&, uint32_t h) const;
+    entry_type getType(id_t) const;
+    entry_type getType(const std::string&) const;
     bool discard(int32_t, real) const;
     std::string getWord(int32_t) const;
     uint32_t hash(const std::string& str) const;
@@ -68,10 +76,14 @@ class Dictionary {
     void save(std::ostream&) const;
     void load(std::istream&);
     int32_t getLine(std::istream&, std::vector<int32_t>&, std::minstd_rand&) const;
-    void threshold(int64_t);
+    int32_t getLine(std::istream& in,
+                    std::vector<int32_t>& words,
+                    std::vector<int32_t>& labels,
+                    std::minstd_rand& rng) const;
+    void threshold(int64_t, int64_t);
     void prune(std::vector<int32_t>&);
     bool isPruned() { return pruneidx_size_ >= 0; }
-    std::vector<int64_t> getCounts() const;
+    std::vector<int64_t> getCounts(entry_type) const;
 };
 
 }
